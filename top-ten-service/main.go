@@ -61,11 +61,17 @@ func getTopTen(c *gin.Context) {
 	reg, err := regexp.Compile("[.,:\"]+")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
 	// Split the string into words after converting the input to lowercase
 	// and replacing all unnecessary characters with a space
 	words := strings.Fields(reg.ReplaceAllString(strings.ToLower(buf.String()), " "))
+
+	if len(words) == 0 {
+		c.JSON(http.StatusBadRequest, "Must contain atleast 1 word")
+		return
+	}
 
 	// Setup a map to track the individual word counts
 	countMap := make(map[string]*WordCountResult)
@@ -87,6 +93,8 @@ func getTopTen(c *gin.Context) {
 	}
 	sort.Sort(sort.Reverse(ByCount{countArr}))
 	// replace old slice with a subslice of the first 10 items
-	countArr = countArr[:10]
+	if len(countArr) >= 10 {
+		countArr = countArr[:10]
+	}
 	c.JSON(200, countArr)
 }
